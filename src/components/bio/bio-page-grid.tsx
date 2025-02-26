@@ -1,16 +1,16 @@
 'use client'
 
-import { useState } from 'react'
-import { formatDistanceToNow } from 'date-fns'
-import { Eye, MoreVertical, BarChart, Pencil, Trash2 } from 'lucide-react'
+import { deleteBioPage } from '@/app/actions/bio'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { formatDistanceToNow } from 'date-fns'
+import { BarChart, Eye, MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { deleteBioPage } from '@/app/actions/bio'
+import { useState } from 'react'
 
 interface BioPage {
   id: string
@@ -24,7 +24,7 @@ export function BioPageGrid({ bioPages }: { bioPages: BioPage[] }) {
   const [searchQuery, setSearchQuery] = useState('')
   const router = useRouter()
 
-  const filteredPages = bioPages.filter(page => 
+  const filteredPages = bioPages.filter(page =>
     page.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     page.username.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -95,7 +95,7 @@ export function BioPageGrid({ bioPages }: { bioPages: BioPage[] }) {
               <div className="mt-4">
                 <h3 className="text-lg font-medium text-gray-900">{page.title}</h3>
                 <a
-                  href={`${process.env.NEXT_PUBLIC_APP_URL}/bio/${page.username}`}
+                  href={`/bio/${page.username}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-indigo-600 hover:text-indigo-900"

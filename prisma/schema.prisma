@@ -1,0 +1,262 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model bio_links {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bio_page_id String    @db.Uuid
+  title       String
+  url         String
+  icon        String?
+  sort_order  Int?      @default(0)
+  is_active   Boolean?  @default(true)
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
+  bio_pages   bio_pages @relation(fields: [bio_page_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([bio_page_id])
+  @@index([sort_order])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model bio_pages {
+  id                String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  username          String           @unique
+  title             String
+  description       String?
+  theme             String?          @default("default")
+  created_at        DateTime?        @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?        @default(now()) @db.Timestamptz(6)
+  user_id           String           @db.Uuid
+  workspace_id      String?          @db.Uuid
+  visibility        visibility_type? @default(public)
+  custom_domain     String?
+  seo_title         String?
+  seo_description   String?
+  social_image_url  String?
+  archived_at       DateTime?        @db.Timestamptz(6)
+  profile_image_url String?
+  theme_config      Json?            @default("{\"name\": \"default\", \"colors\": {\"text\": \"#111827\", \"primary\": \"#4F46E5\", \"background\": \"#FFFFFF\"}}")
+  bio_links         bio_links[]
+  users             users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  workspaces        workspaces?      @relation(fields: [workspace_id], references: [id], onUpdate: NoAction)
+  links             links[]
+  social_links      social_links[]
+
+  @@index([workspace_id, created_at], map: "bio_pages_workspace_created_idx")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model clicks {
+  id                String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at        DateTime?   @default(now()) @db.Timestamptz(6)
+  link_id           String      @db.Uuid
+  ip                String?
+  city              String?
+  country           String?
+  device            String?
+  browser           String?
+  os                String?
+  referer           String?
+  user_agent        String?
+  session_id        String?
+  utm_source        String?
+  utm_medium        String?
+  utm_campaign      String?
+  device_type       String?
+  screen_resolution String?
+  is_unique         Boolean?    @default(true)
+  visit_duration    Int?
+  workspace_id      String?     @db.Uuid
+  links             links       @relation(fields: [link_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  workspaces        workspaces? @relation(fields: [workspace_id], references: [id], onUpdate: NoAction)
+
+  @@index([browser, created_at])
+  @@index([country, created_at])
+  @@index([device, created_at])
+  @@index([is_unique])
+  @@index([link_id, created_at])
+  @@index([os, created_at])
+  @@index([session_id], map: "clicks_session_idx")
+  @@index([workspace_id, created_at], map: "clicks_workspace_created_idx")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model daily_stats {
+  id            String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  date          DateTime  @unique @db.Date
+  total_clicks  Int?      @default(0)
+  unique_clicks Int?      @default(0)
+  new_links     Int?      @default(0)
+  created_at    DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@index([date])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model link_metadata {
+  link_id         String    @id @db.Uuid
+  title           String?
+  description     String?
+  image_url       String?
+  favicon_url     String?
+  domain          String?
+  last_checked_at DateTime? @default(now()) @db.Timestamptz(6)
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime? @default(now()) @db.Timestamptz(6)
+  links           links     @relation(fields: [link_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model link_tag_relations {
+  link_id    String    @db.Uuid
+  tag_id     String    @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  links      links     @relation(fields: [link_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  link_tags  link_tags @relation(fields: [tag_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([link_id, tag_id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model link_tags {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String
+  color              String?              @default("#000000")
+  workspace_id       String?              @db.Uuid
+  created_at         DateTime?            @default(now()) @db.Timestamptz(6)
+  link_tag_relations link_tag_relations[]
+  workspaces         workspaces?          @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([name, workspace_id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model links {
+  id                 String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  short_code         String               @unique
+  original_url       String
+  title              String?
+  created_at         DateTime?            @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime?            @default(now()) @db.Timestamptz(6)
+  user_id            String               @db.Uuid
+  bio_page_id        String?              @db.Uuid
+  is_active          Boolean?             @default(true)
+  expires_at         DateTime?            @db.Timestamptz(6)
+  workspace_id       String?              @db.Uuid
+  type               link_type?           @default(shortlink)
+  status             link_status?         @default(active)
+  visibility         visibility_type?     @default(public)
+  password_hash      String?
+  utm_source         String?
+  utm_medium         String?
+  utm_campaign       String?
+  custom_domain      String?
+  click_limit        Int?
+  archived_at        DateTime?            @db.Timestamptz(6)
+  clicks             clicks[]
+  link_metadata      link_metadata?
+  link_tag_relations link_tag_relations[]
+  bio_pages          bio_pages?           @relation(fields: [bio_page_id], references: [id], onUpdate: NoAction)
+  users              users                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  workspaces         workspaces?          @relation(fields: [workspace_id], references: [id], onUpdate: NoAction)
+
+  @@index([status])
+  @@index([type])
+  @@index([workspace_id, created_at], map: "links_workspace_created_idx")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model social_links {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bio_page_id String    @db.Uuid
+  platform    String
+  url         String
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
+  bio_pages   bio_pages @relation(fields: [bio_page_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([bio_page_id, platform])
+  @@index([bio_page_id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model user_settings {
+  user_id                  String    @id @db.Uuid
+  theme                    String?   @default("light")
+  language                 String?   @default("en")
+  timezone                 String?   @default("UTC")
+  notification_preferences Json?     @default("{}")
+  created_at               DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime? @default(now()) @db.Timestamptz(6)
+  users                    users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model users {
+  id                String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email             String              @unique
+  name              String?
+  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  bio_pages         bio_pages[]
+  links             links[]
+  user_settings     user_settings?
+  workspace_members workspace_members[]
+  workspaces        workspaces[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model workspace_members {
+  workspace_id String     @db.Uuid
+  user_id      String     @db.Uuid
+  role         String     @default("member")
+  created_at   DateTime?  @default(now()) @db.Timestamptz(6)
+  users        users      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  workspaces   workspaces @relation(fields: [workspace_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([workspace_id, user_id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model workspaces {
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String
+  slug              String              @unique
+  description       String?
+  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  owner_id          String              @db.Uuid
+  bio_pages         bio_pages[]
+  clicks            clicks[]
+  link_tags         link_tags[]
+  links             links[]
+  workspace_members workspace_members[]
+  users             users               @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+enum link_status {
+  active
+  disabled
+  expired
+  deleted
+}
+
+enum link_type {
+  shortlink
+  bio
+}
+
+enum visibility_type {
+  public
+  private
+  team
+}

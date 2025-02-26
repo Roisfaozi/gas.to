@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  links    Link[]
+  bioPages BioPage[]
+
+  @@map("users")
+}
+
+model Link {
+  id          String   @id @default(uuid())
+  shortCode   String   @unique
+  originalUrl String
+  title       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  clicks     Click[]
+  bioPageId  String?
+  bioPage    BioPage? @relation(fields: [bioPageId], references: [id])
+  isActive   Boolean  @default(true)
+  expiresAt  DateTime?
+
+  @@map("links")
+}
+
+model BioPage {
+  id          String   @id @default(uuid())
+  username    String   @unique
+  title       String
+  description String?
+  theme       String   @default("default")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  links  Link[]
+
+  @@map("bio_pages")
+}
+
+model Click {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  linkId    String
+  link      Link     @relation(fields: [linkId], references: [id])
+
+  // Analytics data
+  ip        String?
+  city      String?
+  country   String?
+  device    String?
+  browser   String?
+  os        String?
+  referer   String?
+  userAgent String?
+
+  @@map("clicks")
+  @@index([linkId, createdAt])
+  @@index([country, createdAt])
+  @@index([device, createdAt])
+  @@index([browser, createdAt])
+  @@index([os, createdAt])
+}
+
+// Daily statistics model
+model DailyStats {
+  id           String   @id @default(uuid())
+  date         DateTime @unique
+  totalClicks  Int      @default(0)
+  uniqueClicks Int      @default(0)
+  newLinks     Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("daily_stats")
+  @@index([date])
+}

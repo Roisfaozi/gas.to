@@ -1,6 +1,5 @@
 import { BioPageDisplay } from '@/components/bio/bio-page-display'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { notFound } from 'next/navigation'
 
 // Updated dummy data with new theme structure and visibility
 const DUMMY_DATA = {
@@ -101,13 +100,6 @@ export default async function BioPage({
     .eq('username', username)
     .single()
 
-  // For demo purposes, use dummy data if no real data found
-  if (!bioPage) {
-    if (username === DUMMY_DATA.username) {
-      return <BioPageDisplay bioPage={DUMMY_DATA} />
-    }
-    notFound()
-  }
 
   // Check visibility
   if (bioPage.visibility === 'private') {

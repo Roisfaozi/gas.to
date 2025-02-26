@@ -1,5 +1,5 @@
 import { ClicksChart } from '@/components/dashboard/clicks-chart'
-import { RecentActivity } from '@/components/dashboard/recent-activity'
+import { ClickActivity, RecentActivity } from '@/components/dashboard/recent-activity'
 import { RecentLinks } from '@/components/dashboard/recent-links'
 import { StatsCard } from '@/components/dashboard/stats-card'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
@@ -8,6 +8,7 @@ import { requireAuth } from '@/lib/auth'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { calculateGrowth } from '@/lib/utils'
 import { format, subDays } from 'date-fns'
+
 
 export default async function DashboardPage() {
   const session = await requireAuth()
@@ -81,7 +82,7 @@ export default async function DashboardPage() {
       os,
       referer,
       user_agent,
-      links (
+      links!inner (
         id,
         title,
         short_code,
@@ -139,23 +140,26 @@ export default async function DashboardPage() {
   ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
   // Format recent activities
-  const recentActivities = recentClicks?.map(click => ({
-    id: click.id,
-    type: click.links.bio_page_id ? 'bio' : 'shortlink',
-    title: click.links.title || 'Untitled Link',
-    url: click.links.bio_page_id
-      ? `${process.env.NEXT_PUBLIC_APP_URL}/bio/${click.links.short_code}`
-      : `${process.env.NEXT_PUBLIC_APP_URL}/${click.links.short_code}`,
-    visited_at: click.created_at,
-    city: click.city || 'Unknown',
-    country: click.country || 'Unknown',
-    os: click.os || 'Unknown',
-    browser: click.browser || 'Unknown',
-    referer: click.referer,
-    language: click.user_agent?.includes('lang=')
-      ? click.user_agent.split('lang=')[1].split(';')[0]
-      : 'Unknown',
-  })) || []
+  const recentActivities = recentClicks?.map((click) => {
+    const link = Array.isArray(click.links) ? click.links[0] : click.links;
+    return {
+      id: click.id,
+      type: link?.bio_page_id ? 'bio' : 'shortlink',
+      title: link?.title || 'Untitled Link',
+      url: link?.bio_page_id
+        ? `${process.env.NEXT_PUBLIC_APP_URL}/bio/${link?.short_code}`
+        : `${process.env.NEXT_PUBLIC_APP_URL}/${link?.short_code}`,
+      visited_at: click.created_at,
+      city: click.city || 'Unknown',
+      country: click.country || 'Unknown',
+      os: click.os || 'Unknown',
+      browser: click.browser || 'Unknown',
+      referer: click.referer,
+      language: click.user_agent?.includes('lang=')
+        ? click.user_agent.split('lang=')[1].split(';')[0]
+        : 'Unknown',
+    }
+  }) || []
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -179,7 +183,7 @@ export default async function DashboardPage() {
             Clicks Over Time
           </h2>
           <div className="h-[400px]">
-            <ClicksChart data={chartData} />
+            <ClicksChart data={chartData.map(({ date, clicks }) => ({ date, clicks: Number(clicks) }))} />
           </div>
         </div>
 
@@ -187,7 +191,7 @@ export default async function DashboardPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <RecentLinks links={combinedLinks} />
-          <RecentActivity activities={recentActivities} />
+          <RecentActivity activities={recentActivities as ClickActivity[]} />
         </div>
       </div>
     </DashboardLayout>

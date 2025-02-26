@@ -1,16 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
+import { useEffect, useState } from 'react'
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false })
 
-interface ClicksChartProps {
+export interface ClicksChartProps {
   data: Array<{
     date: string
     clicks: number
   }>
 }
-
+type ApexChartTypes = 'area' | 'line' | 'bar' | 'pie' | 'donut' | 'radialBar' | 'scatter' | 'bubble' | 'heatmap' | 'candlestick' | 'boxPlot' | 'radar' | 'polarArea' | 'rangeBar' | 'rangeArea' | 'treemap';
 export function ClicksChart({ data }: ClicksChartProps) {
   const [mounted, setMounted] = useState(false)
 
@@ -20,7 +20,7 @@ export function ClicksChart({ data }: ClicksChartProps) {
 
   if (!mounted) return null
 
-  const options = {
+  const options: any = {
     chart: {
       type: 'area',
       toolbar: {

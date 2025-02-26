@@ -47,7 +47,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
                     rel="noopener noreferrer"
                     className="text-xs text-indigo-600 hover:text-indigo-900"
                   >
-                    {activity.url}
+                    {`${process.env.NEXT_PUBLIC_APP_URL}${activity.url}`}
                   </a>
                 </div>
               </div>

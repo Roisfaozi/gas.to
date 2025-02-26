@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { Copy, MoreVertical } from 'lucide-react'
 import { format } from 'date-fns'
+import { Copy, MoreVertical } from 'lucide-react'
+import { useState } from 'react'
 
 interface RecentLink {
   id: string
@@ -21,7 +21,7 @@ interface RecentLinksProps {
 export function RecentLinks({ links }: RecentLinksProps) {
   const [searchQuery, setSearchQuery] = useState('')
 
-  const filteredLinks = links.filter(link => 
+  const filteredLinks = links.filter(link =>
     link.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     link.url.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -85,9 +85,8 @@ export function RecentLinks({ links }: RecentLinksProps) {
                 <div>
                   <h3 className="text-sm font-medium text-gray-900">{link.title}</h3>
                   <div className="flex items-center space-x-2 mt-1">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      link.status === 'online' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${link.status === 'online' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
                       {link.status}
                     </span>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
@@ -118,7 +117,7 @@ export function RecentLinks({ links }: RecentLinksProps) {
                 rel="noopener noreferrer"
                 className="text-sm text-indigo-600 hover:text-indigo-900"
               >
-                {link.url}
+                {`${process.env.NEXT_PUBLIC_APP_URL}${link.url}`}
               </a>
               <p className="text-xs text-gray-500 mt-1">
                 Created on {format(new Date(link.created_at), 'MMM d, yyyy')}

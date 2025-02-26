@@ -125,7 +125,7 @@ export default async function DashboardPage() {
       status: link.is_active ? 'online' as const : 'disabled' as const,
       visibility: 'public' as const,
       title: link.title || 'Untitled Link',
-      url: `${process.env.NEXT_PUBLIC_APP_URL}/${link.short_code}`,
+      url: `/${link.short_code}`,
       created_at: link.created_at,
     })) || []),
     ...(bioPages?.map(page => ({
@@ -134,7 +134,7 @@ export default async function DashboardPage() {
       status: 'online' as const,
       visibility: 'public' as const,
       title: page.title,
-      url: `${process.env.NEXT_PUBLIC_APP_URL}/bio/${page.username}`,
+      url: `/bio/${page.username}`,
       created_at: page.created_at,
     })) || []),
   ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -147,8 +147,8 @@ export default async function DashboardPage() {
       type: link?.bio_page_id ? 'bio' : 'shortlink',
       title: link?.title || 'Untitled Link',
       url: link?.bio_page_id
-        ? `${process.env.NEXT_PUBLIC_APP_URL}/bio/${link?.short_code}`
-        : `${process.env.NEXT_PUBLIC_APP_URL}/${link?.short_code}`,
+        ? `/bio/${link?.short_code}`
+        : `/${link?.short_code}`,
       visited_at: click.created_at,
       city: click.city || 'Unknown',
       country: click.country || 'Unknown',

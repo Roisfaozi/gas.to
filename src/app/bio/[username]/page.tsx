@@ -110,9 +110,8 @@ export default async function BioPage({
   if (!bioPage) {
     if (username === DUMMY_DATA.username) {
       // Track the page view for dummy data
-      const { browser, os, device } = parseUserAgent(userAgent)
 
-      return <BioPageDisplay bioPage={DUMMY_DATA} />
+      return <BioPageDisplay bioPage={{ ...bioPage, visibility: bioPage.visibility as 'public' | 'private' }} />;
     }
     notFound()
   }

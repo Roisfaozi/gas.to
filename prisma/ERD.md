@@ -14,8 +14,8 @@ erDiagram
   String icon "nullable"
   Int sort_order "nullable"
   Boolean is_active "nullable"
-  DateTime created_at "nullable"
-  DateTime updated_at "nullable"
+  BigInt created_at "nullable"
+  BigInt updated_at "nullable"
 }
 "bio_pages" {
   String id PK
@@ -23,8 +23,6 @@ erDiagram
   String title
   String description "nullable"
   String theme "nullable"
-  DateTime created_at "nullable"
-  DateTime updated_at "nullable"
   String user_id FK
   String workspace_id FK "nullable"
   visibility_type visibility "nullable"
@@ -32,13 +30,14 @@ erDiagram
   String seo_title "nullable"
   String seo_description "nullable"
   String social_image_url "nullable"
-  DateTime archived_at "nullable"
   String profile_image_url "nullable"
   Json theme_config "nullable"
+  BigInt created_at "nullable"
+  BigInt updated_at "nullable"
+  BigInt archived_at "nullable"
 }
 "clicks" {
   String id PK
-  DateTime created_at "nullable"
   String link_id FK
   String ip "nullable"
   String city "nullable"
@@ -64,15 +63,16 @@ erDiagram
   String timezone "nullable"
   String platform "nullable"
   String fingerprint "nullable"
+  BigInt created_at "nullable"
 }
 "daily_stats" {
   String id PK
-  DateTime date UK
   Int total_clicks "nullable"
   Int unique_clicks "nullable"
   Int new_links "nullable"
-  DateTime created_at "nullable"
-  DateTime updated_at "nullable"
+  BigInt date "nullable"
+  BigInt created_at "nullable"
+  BigInt updated_at "nullable"
 }
 "link_metadata" {
   String link_id PK
@@ -81,9 +81,9 @@ erDiagram
   String image_url "nullable"
   String favicon_url "nullable"
   String domain "nullable"
-  DateTime last_checked_at "nullable"
-  DateTime created_at "nullable"
-  DateTime updated_at "nullable"
+  BigInt last_checked_at "nullable"
+  BigInt created_at "nullable"
+  BigInt updated_at "nullable"
 }
 "link_tag_relations" {
   String link_id FK
@@ -102,12 +102,9 @@ erDiagram
   String short_code UK
   String original_url
   String title "nullable"
-  DateTime created_at "nullable"
-  DateTime updated_at "nullable"
   String user_id FK
   String bio_page_id FK "nullable"
   Boolean is_active "nullable"
-  DateTime expires_at "nullable"
   String workspace_id FK "nullable"
   link_type type "nullable"
   link_status status "nullable"
@@ -119,14 +116,17 @@ erDiagram
   String custom_domain "nullable"
   Int click_limit "nullable"
   DateTime archived_at "nullable"
+  BigInt created_at "nullable"
+  BigInt updated_at "nullable"
+  BigInt expires_at "nullable"
 }
 "social_links" {
   String id PK
   String bio_page_id FK
   String platform
   String url
-  DateTime created_at "nullable"
-  DateTime updated_at "nullable"
+  BigInt created_at "nullable"
+  BigInt updated_at "nullable"
 }
 "user_settings" {
   String user_id PK
@@ -134,15 +134,15 @@ erDiagram
   String language "nullable"
   String timezone "nullable"
   Json notification_preferences "nullable"
-  DateTime created_at "nullable"
-  DateTime updated_at "nullable"
+  BigInt created_at "nullable"
+  BigInt updated_at "nullable"
 }
 "users" {
   String id PK
   String email UK
   String name "nullable"
-  DateTime created_at "nullable"
-  DateTime updated_at "nullable"
+  BigInt created_at "nullable"
+  BigInt updated_at "nullable"
 }
 "workspace_members" {
   String workspace_id FK
@@ -155,9 +155,9 @@ erDiagram
   String name
   String slug UK
   String description "nullable"
-  DateTime created_at "nullable"
-  DateTime updated_at "nullable"
   String owner_id FK
+  BigInt created_at "nullable"
+  BigInt updated_at "nullable"
 }
 "geolocation_data" {
   String id PK
@@ -170,7 +170,7 @@ erDiagram
   String country "nullable"
   String postal_code "nullable"
   Boolean consent_given "nullable"
-  DateTime created_at "nullable"
+  BigInt created_at "nullable"
 }
 "visitor_data" {
   String id PK
@@ -179,19 +179,19 @@ erDiagram
   String email "nullable"
   String phone "nullable"
   Boolean consent_given "nullable"
-  DateTime consent_timestamp "nullable"
-  DateTime created_at "nullable"
-  DateTime updated_at "nullable"
+  BigInt consent_timestamp "nullable"
+  BigInt created_at "nullable"
+  BigInt updated_at "nullable"
 }
 "visitor_sessions" {
   String id PK
   String visitor_id
   String fingerprint "nullable"
-  DateTime started_at "nullable"
-  DateTime ended_at "nullable"
   Int duration "nullable"
   Boolean is_returning "nullable"
-  DateTime created_at "nullable"
+  BigInt started_at "nullable"
+  BigInt ended_at "nullable"
+  BigInt created_at "nullable"
 }
 "bio_links" }o--|| "bio_pages" : bio_pages
 "bio_pages" }o--|| "users" : users
@@ -237,8 +237,6 @@ This model contains row level security and requires additional setup for migrati
   - `title`: 
   - `description`: 
   - `theme`: 
-  - `created_at`: 
-  - `updated_at`: 
   - `user_id`: 
   - `workspace_id`: 
   - `visibility`: 
@@ -246,16 +244,17 @@ This model contains row level security and requires additional setup for migrati
   - `seo_title`: 
   - `seo_description`: 
   - `social_image_url`: 
-  - `archived_at`: 
   - `profile_image_url`: 
   - `theme_config`: 
+  - `created_at`: 
+  - `updated_at`: 
+  - `archived_at`: 
 
 ### `clicks`
 This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 
 **Properties**
   - `id`: 
-  - `created_at`: 
   - `link_id`: 
   - `ip`: 
   - `city`: 
@@ -281,16 +280,17 @@ This model contains row level security and requires additional setup for migrati
   - `timezone`: 
   - `platform`: 
   - `fingerprint`: 
+  - `created_at`: 
 
 ### `daily_stats`
 This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 
 **Properties**
   - `id`: 
-  - `date`: 
   - `total_clicks`: 
   - `unique_clicks`: 
   - `new_links`: 
+  - `date`: 
   - `created_at`: 
   - `updated_at`: 
 
@@ -334,12 +334,9 @@ This model contains row level security and requires additional setup for migrati
   - `short_code`: 
   - `original_url`: 
   - `title`: 
-  - `created_at`: 
-  - `updated_at`: 
   - `user_id`: 
   - `bio_page_id`: 
   - `is_active`: 
-  - `expires_at`: 
   - `workspace_id`: 
   - `type`: 
   - `status`: 
@@ -351,6 +348,9 @@ This model contains row level security and requires additional setup for migrati
   - `custom_domain`: 
   - `click_limit`: 
   - `archived_at`: 
+  - `created_at`: 
+  - `updated_at`: 
+  - `expires_at`: 
 
 ### `social_links`
 This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -402,9 +402,9 @@ This model contains row level security and requires additional setup for migrati
   - `name`: 
   - `slug`: 
   - `description`: 
+  - `owner_id`: 
   - `created_at`: 
   - `updated_at`: 
-  - `owner_id`: 
 
 ### `geolocation_data`
 This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -443,8 +443,8 @@ This model contains row level security and requires additional setup for migrati
   - `id`: 
   - `visitor_id`: 
   - `fingerprint`: 
-  - `started_at`: 
-  - `ended_at`: 
   - `duration`: 
   - `is_returning`: 
+  - `started_at`: 
+  - `ended_at`: 
   - `created_at`: 

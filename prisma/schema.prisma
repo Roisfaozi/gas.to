@@ -22,8 +22,8 @@ model bio_links {
   icon        String?
   sort_order  Int?      @default(0)
   is_active   Boolean?  @default(true)
-  created_at  DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
+  created_at  BigInt?
+  updated_at  BigInt?
   bio_pages   bio_pages @relation(fields: [bio_page_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([bio_page_id])
@@ -37,8 +37,6 @@ model bio_pages {
   title             String
   description       String?
   theme             String?          @default("default")
-  created_at        DateTime?        @default(now()) @db.Timestamptz(6)
-  updated_at        DateTime?        @default(now()) @db.Timestamptz(6)
   user_id           String           @db.Uuid
   workspace_id      String?          @db.Uuid
   visibility        visibility_type? @default(public)
@@ -46,22 +44,21 @@ model bio_pages {
   seo_title         String?
   seo_description   String?
   social_image_url  String?
-  archived_at       DateTime?        @db.Timestamptz(6)
   profile_image_url String?
   theme_config      Json?            @default("{\"name\": \"default\", \"colors\": {\"text\": \"#111827\", \"primary\": \"#4F46E5\", \"background\": \"#FFFFFF\"}}")
+  created_at        BigInt?
+  updated_at        BigInt?
+  archived_at       BigInt?
   bio_links         bio_links[]
   users             users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   workspaces        workspaces?      @relation(fields: [workspace_id], references: [id], onUpdate: NoAction)
   links             links[]
   social_links      social_links[]
-
-  @@index([workspace_id, created_at], map: "bio_pages_workspace_created_idx")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model clicks {
   id                 String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  created_at         DateTime?         @default(now()) @db.Timestamptz(6)
   link_id            String            @db.Uuid
   ip                 String?
   city               String?
@@ -87,18 +84,13 @@ model clicks {
   timezone           String?
   platform           String?
   fingerprint        String?
+  created_at         BigInt?
   links              links             @relation(fields: [link_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   visitor_sessions   visitor_sessions? @relation(fields: [visitor_session_id], references: [id], onUpdate: NoAction)
   workspaces         workspaces?       @relation(fields: [workspace_id], references: [id], onUpdate: NoAction)
 
-  @@index([browser, created_at])
-  @@index([country, created_at])
-  @@index([device, created_at])
   @@index([is_unique])
-  @@index([link_id, created_at])
-  @@index([os, created_at])
   @@index([session_id], map: "clicks_session_idx")
-  @@index([workspace_id, created_at], map: "clicks_workspace_created_idx")
   @@index([fingerprint])
   @@index([session_id])
   @@index([visitor_id])
@@ -106,29 +98,27 @@ model clicks {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model daily_stats {
-  id            String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  date          DateTime  @unique @db.Date
-  total_clicks  Int?      @default(0)
-  unique_clicks Int?      @default(0)
-  new_links     Int?      @default(0)
-  created_at    DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at    DateTime? @default(now()) @db.Timestamptz(6)
-
-  @@index([date])
+  id            String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  total_clicks  Int?    @default(0)
+  unique_clicks Int?    @default(0)
+  new_links     Int?    @default(0)
+  date          BigInt?
+  created_at    BigInt?
+  updated_at    BigInt?
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model link_metadata {
-  link_id         String    @id @db.Uuid
+  link_id         String  @id @db.Uuid
   title           String?
   description     String?
   image_url       String?
   favicon_url     String?
   domain          String?
-  last_checked_at DateTime? @default(now()) @db.Timestamptz(6)
-  created_at      DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime? @default(now()) @db.Timestamptz(6)
-  links           links     @relation(fields: [link_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  last_checked_at BigInt?
+  created_at      BigInt?
+  updated_at      BigInt?
+  links           links   @relation(fields: [link_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -161,12 +151,9 @@ model links {
   short_code         String               @unique
   original_url       String
   title              String?
-  created_at         DateTime?            @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime?            @default(now()) @db.Timestamptz(6)
   user_id            String               @db.Uuid
   bio_page_id        String?              @db.Uuid
   is_active          Boolean?             @default(true)
-  expires_at         DateTime?            @db.Timestamptz(6)
   workspace_id       String?              @db.Uuid
   type               link_type?           @default(shortlink)
   status             link_status?         @default(active)
@@ -178,6 +165,9 @@ model links {
   custom_domain      String?
   click_limit        Int?
   archived_at        DateTime?            @db.Timestamptz(6)
+  created_at         BigInt?
+  updated_at         BigInt?
+  expires_at         BigInt?
   clicks             clicks[]
   link_metadata      link_metadata?
   link_tag_relations link_tag_relations[]
@@ -187,7 +177,6 @@ model links {
 
   @@index([status])
   @@index([type])
-  @@index([workspace_id, created_at], map: "links_workspace_created_idx")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -196,8 +185,8 @@ model social_links {
   bio_page_id String    @db.Uuid
   platform    String
   url         String
-  created_at  DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
+  created_at  BigInt?
+  updated_at  BigInt?
   bio_pages   bio_pages @relation(fields: [bio_page_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([bio_page_id, platform])
@@ -206,14 +195,14 @@ model social_links {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model user_settings {
-  user_id                  String    @id @db.Uuid
-  theme                    String?   @default("light")
-  language                 String?   @default("en")
-  timezone                 String?   @default("UTC")
-  notification_preferences Json?     @default("{}")
-  created_at               DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at               DateTime? @default(now()) @db.Timestamptz(6)
-  users                    users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user_id                  String  @id @db.Uuid
+  theme                    String? @default("light")
+  language                 String? @default("en")
+  timezone                 String? @default("UTC")
+  notification_preferences Json?   @default("{}")
+  created_at               BigInt?
+  updated_at               BigInt?
+  users                    users   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -221,8 +210,8 @@ model users {
   id                String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   email             String              @unique
   name              String?
-  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
-  updated_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  created_at        BigInt?
+  updated_at        BigInt?
   bio_pages         bio_pages[]
   links             links[]
   user_settings     user_settings?
@@ -248,9 +237,9 @@ model workspaces {
   name              String
   slug              String              @unique
   description       String?
-  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
-  updated_at        DateTime?           @default(now()) @db.Timestamptz(6)
   owner_id          String              @db.Uuid
+  created_at        BigInt?
+  updated_at        BigInt?
   bio_pages         bio_pages[]
   clicks            clicks[]
   link_tags         link_tags[]
@@ -271,7 +260,7 @@ model geolocation_data {
   country          String?
   postal_code      String?
   consent_given    Boolean?          @default(false)
-  created_at       DateTime?         @default(now()) @db.Timestamptz(6)
+  created_at       BigInt?
   visitor_sessions visitor_sessions? @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([session_id])
@@ -279,15 +268,15 @@ model geolocation_data {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model visitor_data {
-  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  visitor_id        String    @db.Uuid
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  visitor_id        String   @db.Uuid
   name              String?
   email             String?
   phone             String?
-  consent_given     Boolean?  @default(false)
-  consent_timestamp DateTime? @db.Timestamptz(6)
-  created_at        DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at        DateTime? @default(now()) @db.Timestamptz(6)
+  consent_given     Boolean? @default(false)
+  consent_timestamp BigInt?
+  created_at        BigInt?
+  updated_at        BigInt?
 
   @@index([visitor_id])
 }
@@ -297,11 +286,11 @@ model visitor_sessions {
   id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   visitor_id       String             @db.Uuid
   fingerprint      String?
-  started_at       DateTime?          @default(now()) @db.Timestamptz(6)
-  ended_at         DateTime?          @db.Timestamptz(6)
   duration         Int?
   is_returning     Boolean?           @default(false)
-  created_at       DateTime?          @default(now()) @db.Timestamptz(6)
+  started_at       BigInt?
+  ended_at         BigInt?
+  created_at       BigInt?
   clicks           clicks[]
   geolocation_data geolocation_data[]
 

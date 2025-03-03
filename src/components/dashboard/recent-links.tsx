@@ -26,7 +26,7 @@ export function RecentLinks({ links }: RecentLinksProps) {
   )
 
   const copyToClipboard = async (url: string) => {
-    await navigator.clipboard.writeText(url)
+    await navigator.clipboard.writeText(process.env.NEXT_PUBLIC_APP_URL + url)
   }
 
   return (

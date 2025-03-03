@@ -1,9 +1,8 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { LogOut, User, Link as LinkIcon, Settings } from 'lucide-react'
 import { signOut } from '@/app/actions/auth'
+import { BarChart3, Link as LinkIcon, LogOut, Settings, User } from 'lucide-react'
+import Link from 'next/link'
 
 export function DashboardHeader() {
   return (
@@ -33,6 +32,15 @@ export function DashboardHeader() {
                 className="px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50"
               >
                 Bio Page
+              </Link>
+              <Link
+                href="/dashboard/analytics"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+              >
+                <span className="flex items-center">
+                  <BarChart3 className="h-4 w-4 mr-1" />
+                  Analytics
+                </span>
               </Link>
             </nav>
           </div>

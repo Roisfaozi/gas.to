@@ -1,5 +1,8 @@
 import { BioPageDisplay } from '@/components/bio/bio-page-display'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { parseUserAgent } from '@/lib/utils'
+import { headers } from 'next/headers'
+import { notFound } from 'next/navigation'
 
 // Updated dummy data with new theme structure and visibility
 const DUMMY_DATA = {
@@ -77,6 +80,10 @@ export default async function BioPage({
   params: { username: string }
 }) {
   const supabase = createServerSupabaseClient()
+  const headersList = headers()
+  const userAgent = headersList.get('user-agent') || ''
+  const referer = headersList.get('referer') || ''
+  const ip = headersList.get('x-forwarded-for') || ''
 
   // Get bio page with all related data
   const { data: bioPage } = await supabase
@@ -100,6 +107,15 @@ export default async function BioPage({
     .eq('username', username)
     .single()
 
+  if (!bioPage) {
+    if (username === DUMMY_DATA.username) {
+      // Track the page view for dummy data
+      const { browser, os, device } = parseUserAgent(userAgent)
+
+      return <BioPageDisplay bioPage={DUMMY_DATA} />
+    }
+    notFound()
+  }
 
   // Check visibility
   if (bioPage.visibility === 'private') {
@@ -109,6 +125,25 @@ export default async function BioPage({
       return <BioPageDisplay bioPage={{ ...bioPage, bio_links: [], social_links: [] }} />
     }
   }
+  // Track the page view
+  const { browser, os, device } = parseUserAgent(userAgent)
+
+  // Create a click record for analytics
+  await supabase
+    .from('clicks')
+    .insert([
+      {
+        link_id: null, // No specific link for bio page views
+        bio_page_id: bioPage.id,
+        ip,
+        referer,
+        browser,
+        os,
+        device,
+        user_agent: userAgent,
+        type: 'bio_view',
+      },
+    ])
 
   return <BioPageDisplay bioPage={bioPage} />
 }

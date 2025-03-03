@@ -1,5 +1,7 @@
 'use client'
 
+import { initSession } from '@/lib/analytics/session'
+import { trackClick } from '@/lib/analytics/track'
 import { ExternalLink, Instagram, Linkedin, Moon, Sun, Twitter, Youtube } from 'lucide-react'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
@@ -67,7 +69,17 @@ export function BioPageDisplay({ bioPage }: { bioPage: BioPage }) {
     if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
       setIsDarkMode(true)
     }
+    initSession()
   }, [])
+
+  // Handle link click with tracking
+  const handleLinkClick = (linkId: string, url: string) => {
+    // Track the click
+    trackClick(linkId)
+
+    // Open the link
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
 
   // Handle visibility
   if (bioPage.visibility === 'private') {

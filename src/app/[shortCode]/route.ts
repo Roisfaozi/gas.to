@@ -16,7 +16,7 @@ export async function GET(
   const userAgent = headersList.get('user-agent') || ''
   const referer = headersList.get('referer') || ''
   const ip = headersList.get('x-forwarded-for') || ''
-
+  const language = headersList.get('accept-language') || ''
   // Fetch geo data
   let geoData = null
   if (ip && ip !== '::1') {
@@ -75,6 +75,10 @@ export async function GET(
         user_agent: userAgent,
         city: geoData?.city || null,
         country: geoData?.country || null,
+        language: language.split(',')[0],
+        visitor_id: null,
+        session_id: null,
+        fingerprint: null,
         is_unique: true,
       },
     ])
@@ -91,6 +95,10 @@ export async function GET(
         user_agent: userAgent,
         city: geoData?.city || null,
         country: geoData?.country || null,
+        language: language.split(',')[0],
+        visitor_id: null,
+        session_id: null,
+        fingerprint: null,
         is_unique: false,
       },
     ])

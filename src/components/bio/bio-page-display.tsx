@@ -141,6 +141,10 @@ export function BioPageDisplay({ bioPage }: { bioPage: BioPage }) {
               <a
                 key={social.id || index}
                 href={social.url}
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleLinkClick(social.id || `social-${index}`, social.url)
+                }}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ color: colors.text }}
@@ -161,6 +165,10 @@ export function BioPageDisplay({ bioPage }: { bioPage: BioPage }) {
               <a
                 key={link.id}
                 href={link.url}
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleLinkClick(link.id, link.url)
+                }}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -181,6 +189,6 @@ export function BioPageDisplay({ bioPage }: { bioPage: BioPage }) {
           </p>
         </div>
       </div>
-    </div>
+    </div >
   )
 }

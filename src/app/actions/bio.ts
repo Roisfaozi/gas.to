@@ -1,5 +1,6 @@
 'use server'
 
+import { getCurrentEpoch } from '@/lib/utils'
 import { createServerClient } from '@supabase/ssr'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
@@ -66,6 +67,8 @@ export async function createBioPage(formData: FormData) {
     return { error: 'Username is already taken' }
   }
 
+  const currentEpoch = getCurrentEpoch()
+
   const { data, error } = await supabase
     .from('bio_pages')
     .insert([
@@ -79,8 +82,13 @@ export async function createBioPage(formData: FormData) {
             primary: '#4F46E5',
             text: '#111827',
             background: '#FFFFFF',
+            darkPrimary: '#4F46E5',
+            darkText: '#FFFFFF',
+            darkBackground: '#111827',
           },
         },
+        created_at: currentEpoch,
+        updated_at: currentEpoch,
       },
     ])
     .select()
@@ -167,6 +175,8 @@ export async function updateBioPage(formData: FormData) {
     return { error: 'Username is already taken' }
   }
 
+  const currentEpoch = getCurrentEpoch()
+
   // Start a transaction
   const { error: bioPageError } = await supabase
     .from('bio_pages')
@@ -180,7 +190,7 @@ export async function updateBioPage(formData: FormData) {
       seo_title,
       seo_description,
       social_image_url,
-      updated_at: new Date().toISOString(),
+      updated_at: currentEpoch,
     })
     .eq('id', id)
     .eq('user_id', session.user.id)
@@ -200,6 +210,8 @@ export async function updateBioPage(formData: FormData) {
           bio_page_id: id,
           platform: link.platform,
           url: link.url,
+          created_at: currentEpoch,
+          updated_at: currentEpoch,
         }))
       )
 
@@ -220,6 +232,8 @@ export async function updateBioPage(formData: FormData) {
         icon: link.icon,
         sort_order: index,
         is_active: true,
+        created_at: currentEpoch,
+        updated_at: currentEpoch,
       }))
     )
 

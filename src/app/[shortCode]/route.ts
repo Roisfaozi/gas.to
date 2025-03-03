@@ -1,7 +1,8 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { parseUserAgent } from '@/lib/utils'
+import { getCurrentEpoch, parseUserAgent } from '@/lib/utils'
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
@@ -38,16 +39,9 @@ export async function GET(
   if (
     !link ||
     !link.is_active ||
-    (link.expires_at && new Date(link.expires_at) < new Date())
+    (link.expires_at && link.expires_at < getCurrentEpoch())
   ) {
-    return NextResponse.json(
-      {
-        error: 'No url found',
-      },
-      {
-        status: 404,
-      }
-    )
+    redirect('/404')
   }
 
   // Parse user agent
@@ -80,6 +74,7 @@ export async function GET(
         session_id: null,
         fingerprint: null,
         is_unique: true,
+        created_at: getCurrentEpoch(),
       },
     ])
   } else {
@@ -100,6 +95,7 @@ export async function GET(
         session_id: null,
         fingerprint: null,
         is_unique: false,
+        created_at: getCurrentEpoch(),
       },
     ])
   }

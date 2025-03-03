@@ -1,5 +1,6 @@
 'use client'
 
+import { epochToDate } from '@/lib/utils'
 import { format } from 'date-fns'
 import { Chrome, Facebook, Globe, Monitor } from 'lucide-react'
 
@@ -8,7 +9,7 @@ export interface ClickActivity {
   type: 'bio' | 'shortlink'
   title: string
   url: string
-  visited_at: string
+  visited_at: number
   city: string
   country: string
   os: string
@@ -53,7 +54,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-500">
-                  {format(new Date(activity.visited_at), 'MMM d, yyyy HH:mm')}
+                  {format(epochToDate(activity.visited_at), 'MMM d, yyyy HH:mm')}
                 </p>
               </div>
             </div>

@@ -1,6 +1,6 @@
 import { BioPageDisplay } from '@/components/bio/bio-page-display'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { parseUserAgent } from '@/lib/utils'
+import { getCurrentEpoch, parseUserAgent } from '@/lib/utils'
 import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 
@@ -127,7 +127,7 @@ export default async function BioPage({
   }
   // Track the page view
   const { browser, os, device } = parseUserAgent(userAgent)
-
+  const currentEpoch = getCurrentEpoch()
   // Create a click record for analytics
   await supabase
     .from('clicks')
@@ -142,6 +142,7 @@ export default async function BioPage({
         device,
         user_agent: userAgent,
         type: 'bio_view',
+        created_at: currentEpoch
       },
     ])
 

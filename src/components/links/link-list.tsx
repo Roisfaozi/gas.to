@@ -1,9 +1,9 @@
 'use client'
 
 import { supabase } from '@/lib/supabase/client'
+import { formatEpochDate } from '@/lib/utils'
 import { Copy, ExternalLink, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-
 export function LinkList({ links }) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
@@ -104,7 +104,7 @@ export function LinkList({ links }) {
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm text-gray-500">
-                  {new Date(link.created_at).toLocaleDateString()}
+                  {formatEpochDate(link.created_at, 'PP')}
                 </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right">

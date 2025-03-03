@@ -1,5 +1,4 @@
 'use client'
-
 import { deleteBioPage } from '@/app/actions/bio'
 import {
   DropdownMenu,
@@ -7,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { formatDistanceToNow } from 'date-fns'
+import { formatEpochRelative } from '@/lib/utils'
 import { BarChart, Eye, MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -16,7 +15,7 @@ interface BioPage {
   id: string
   title: string
   username: string
-  created_at: string
+  created_at: number
   clicks: Array<{ count: number }>
 }
 
@@ -110,7 +109,7 @@ export function BioPageGrid({ bioPages }: { bioPages: BioPage[] }) {
                   {page.clicks?.[0]?.count || 0} views
                 </div>
                 <div>
-                  Created {formatDistanceToNow(new Date(page.created_at))} ago
+                  Created {formatEpochRelative(page.created_at)} ago
                 </div>
               </div>
             </div>

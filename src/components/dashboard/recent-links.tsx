@@ -1,9 +1,8 @@
 'use client'
 
-import { format } from 'date-fns'
+import { formatEpochRelative } from '@/lib/utils'
 import { Copy, MoreVertical } from 'lucide-react'
 import { useState } from 'react'
-
 interface RecentLink {
   id: string
   type: 'bio' | 'shortlink'
@@ -11,7 +10,7 @@ interface RecentLink {
   visibility: 'public' | 'private'
   title: string
   url: string
-  created_at: string
+  created_at: number
 }
 
 interface RecentLinksProps {
@@ -120,7 +119,7 @@ export function RecentLinks({ links }: RecentLinksProps) {
                 {`${process.env.NEXT_PUBLIC_APP_URL}${link.url}`}
               </a>
               <p className="text-xs text-gray-500 mt-1">
-                Created on {format(new Date(link.created_at), 'MMM d, yyyy')}
+                Created {formatEpochRelative(link.created_at)}
               </p>
             </div>
           </div>

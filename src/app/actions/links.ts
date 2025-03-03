@@ -1,9 +1,9 @@
 'use server'
 
-import { cookies } from 'next/headers'
+import { generateShortCode, getCurrentEpoch, isValidUrl } from '@/lib/utils'
 import { createServerClient } from '@supabase/ssr'
-import { generateShortCode, isValidUrl } from '@/lib/utils'
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
 
 export async function createSingleLink(formData: FormData) {
   const url = formData.get('url') as string
@@ -40,25 +40,29 @@ export async function createSingleLink(formData: FormData) {
     }
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
   if (!session) {
     return { error: 'Not authenticated' }
   }
 
   const shortCode = generateShortCode()
-  const { error } = await supabase
-    .from('links')
-    .insert([
-      {
-        short_code: shortCode,
-        original_url: url,
-        title: title || url,
-        user_id: session.user.id,
-        type: 'shortlink',
-        status: 'active',
-        visibility: 'public',
-      },
-    ])
+  const currentEpoch = getCurrentEpoch()
+
+  const { error } = await supabase.from('links').insert([
+    {
+      short_code: shortCode,
+      original_url: url,
+      title: title || url,
+      user_id: session.user.id,
+      type: 'shortlink',
+      status: 'active',
+      visibility: 'public',
+      created_at: currentEpoch,
+      updated_at: currentEpoch,
+    },
+  ])
 
   if (error) {
     return { error: error.message }
@@ -69,13 +73,15 @@ export async function createSingleLink(formData: FormData) {
 }
 
 export async function createMultipleLinks(formData: FormData) {
-  const urls = (formData.get('urls') as string).split('\n').filter(url => url.trim())
+  const urls = (formData.get('urls') as string)
+    .split('\n')
+    .filter((url) => url.trim())
 
   if (urls.length === 0) {
     return { error: 'No URLs provided' }
   }
 
-  const invalidUrls = urls.filter(url => !isValidUrl(url.trim()))
+  const invalidUrls = urls.filter((url) => !isValidUrl(url.trim()))
   if (invalidUrls.length > 0) {
     return { error: `Invalid URLs: ${invalidUrls.join(', ')}` }
   }
@@ -107,12 +113,16 @@ export async function createMultipleLinks(formData: FormData) {
     }
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
   if (!session) {
     return { error: 'Not authenticated' }
   }
 
-  const links = urls.map(url => ({
+  const currentEpoch = getCurrentEpoch()
+
+  const links = urls.map((url) => ({
     short_code: generateShortCode(),
     original_url: url.trim(),
     title: url.trim(),
@@ -120,11 +130,11 @@ export async function createMultipleLinks(formData: FormData) {
     type: 'shortlink',
     status: 'active',
     visibility: 'public',
+    created_at: currentEpoch,
+    updated_at: currentEpoch,
   }))
 
-  const { error } = await supabase
-    .from('links')
-    .insert(links)
+  const { error } = await supabase.from('links').insert(links)
 
   if (error) {
     return { error: error.message }

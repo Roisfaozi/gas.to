@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client'
+import { getCurrentEpoch } from '@/lib/utils'
 import { generateFingerprint } from './fingerprint'
 import { requestGeolocation, reverseGeocode } from './geolocation'
 
@@ -34,6 +35,8 @@ export async function initSession(): Promise<SessionData> {
       ? existingVisitors[0].visitor_id
       : crypto.randomUUID()
 
+    const currentEpoch = getCurrentEpoch()
+
     // Create a new session
     const { data: session, error } = await supabase
       .from('visitor_sessions')
@@ -42,6 +45,8 @@ export async function initSession(): Promise<SessionData> {
           visitor_id: visitorId,
           fingerprint,
           is_returning: isReturning,
+          started_at: currentEpoch,
+          created_at: currentEpoch,
         },
       ])
       .select()
@@ -114,6 +119,7 @@ export async function captureGeolocation(
       geoData.latitude,
       geoData.longitude
     )
+    const currentEpoch = getCurrentEpoch()
 
     // Save geolocation data
     await supabase.from('geolocation_data').insert([
@@ -127,6 +133,7 @@ export async function captureGeolocation(
         country: locationDetails?.country,
         postal_code: locationDetails?.postal_code,
         consent_given: true,
+        created_at: currentEpoch,
       },
     ])
   } catch (error) {
@@ -144,6 +151,8 @@ export async function saveVisitorData(
   try {
     if (!currentSession || !consent) return
 
+    const currentEpoch = getCurrentEpoch()
+
     await supabase.from('visitor_data').insert([
       {
         visitor_id: currentSession.visitorId,
@@ -151,6 +160,9 @@ export async function saveVisitorData(
         email: data.email,
         phone: data.phone,
         consent_given: consent,
+        consent_timestamp: currentEpoch,
+        created_at: currentEpoch,
+        updated_at: currentEpoch,
       },
     ])
   } catch (error) {
@@ -166,9 +178,11 @@ function setupSessionEndHandler(): void {
     if (!currentSession) return
 
     try {
+      const currentEpoch = getCurrentEpoch()
+
       await supabase
         .from('visitor_sessions')
-        .update({ ended_at: new Date() })
+        .update({ ended_at: currentEpoch })
         .eq('id', currentSession.sessionId)
     } catch (error) {
       console.error('Error ending session:', error)

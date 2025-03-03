@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase/client'
-import { parseUserAgent } from '@/lib/utils'
+import { getCurrentEpoch, parseUserAgent } from '@/lib/utils'
 import { getSession } from './session'
 
 /**
@@ -25,6 +25,8 @@ export async function trackClick(linkId: string): Promise<void> {
     // Get referrer
     const referer = document.referrer
 
+    const currentEpoch = getCurrentEpoch()
+
     // Record the click with enhanced data
     await supabase.from('clicks').insert([
       {
@@ -43,6 +45,7 @@ export async function trackClick(linkId: string): Promise<void> {
         timezone,
         platform: navigator.platform,
         user_agent: userAgent,
+        created_at: currentEpoch,
       },
     ])
   } catch (error) {
@@ -61,6 +64,8 @@ export async function trackPageView(
     // Get current session
     const session = await getSession()
 
+    const currentEpoch = getCurrentEpoch()
+
     // Record page view (using the clicks table for simplicity)
     // In a more complex implementation, you might want a separate page_views table
     await supabase.from('clicks').insert([
@@ -75,6 +80,7 @@ export async function trackPageView(
         title: pageTitle,
         url: pageUrl,
         type: 'page_view',
+        created_at: currentEpoch,
       },
     ])
   } catch (error) {

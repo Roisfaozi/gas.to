@@ -6,7 +6,7 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { CreateLinkForms } from '@/components/links/create-link-forms'
 import { requireAuth } from '@/lib/auth'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { calculateGrowth } from '@/lib/utils'
+import { calculateGrowth, dateToEpoch, epochToDate, getCurrentEpoch } from '@/lib/utils'
 import { format, subDays } from 'date-fns'
 
 
@@ -14,44 +14,49 @@ export default async function DashboardPage() {
   const session = await requireAuth()
   const supabase = createServerSupabaseClient()
 
-  // Get today's and yesterday's date
-  const today = new Date().toLocaleString("en-US", { timeZone: "America/Los_Angeles" })
-  const yesterday = subDays(today, 1)
-  const twoMonthsAgo = subDays(today, 60)
+  // Get today's and yesterday's date as epoch timestamps
+  const today = getCurrentEpoch()
+  const yesterday = dateToEpoch(subDays(new Date(), 1))
+  const twoMonthsAgo = dateToEpoch(subDays(new Date(), 60))
+
+  // Format dates for query
+  const todayFormatted = format(epochToDate(today), 'yyyy-MM-dd')
+  const yesterdayFormatted = format(epochToDate(yesterday), 'yyyy-MM-dd')
+  const twoMonthsAgoFormatted = format(epochToDate(twoMonthsAgo), 'yyyy-MM-dd')
 
   // Get today's stats
   const { data: todayLinks } = await supabase
     .from('links')
     .select('id')
     .eq('user_id', session.user.id)
-    .gte('created_at', format(today, 'yyyy-MM-dd'))
+    .gte('created_at', today - (24 * 60 * 60 * 1000))
 
   const { data: todayClicks, error } = await supabase
     .from('clicks')
     .select('id, links(*)')
     .eq('links.user_id', session.user.id)
-    .gte('created_at', format(today, 'yyyy-MM-dd'))
+    .gte('created_at', today - (24 * 60 * 60 * 1000))
   // Get yesterday's stats
   const { data: yesterdayLinks } = await supabase
     .from('links')
     .select('id')
     .eq('user_id', session.user.id)
-    .gte('created_at', format(yesterday, 'yyyy-MM-dd'))
-    .lt('created_at', format(today, 'yyyy-MM-dd'))
+    .gte('created_at', yesterday - (24 * 60 * 60 * 1000))
+    .lt('created_at', today - (24 * 60 * 60 * 1000))
 
   const { data: yesterdayClicks } = await supabase
     .from('clicks')
     .select('id')
     .eq('user_id', session.user.id)
-    .gte('created_at', format(yesterday, 'yyyy-MM-dd'))
-    .lt('created_at', format(today, 'yyyy-MM-dd'))
+    .gte('created_at', yesterday - (24 * 60 * 60 * 1000))
+    .lt('created_at', today - (24 * 60 * 60 * 1000))
 
   // Get clicks data for the chart (last 60 days)
   const { data: clicksData } = await supabase
     .from('clicks')
     .select('created_at, links(*)')
     .eq('links.user_id', session.user.id)
-    .gte('created_at', format(twoMonthsAgo, 'yyyy-MM-dd'))
+    .gte('created_at', twoMonthsAgo)
     .order('created_at', { ascending: true });
   // Get recent links and bio pages
   const { data: recentLinks } = await supabase
@@ -95,7 +100,7 @@ export default async function DashboardPage() {
 
   // Process clicks data for the chart
   const clicksByDay = clicksData?.reduce((acc, click) => {
-    const day = format(new Date(click.created_at), 'yyyy-MM-dd')
+    const day = format(epochToDate(click.created_at), 'yyyy-MM-dd')
     acc[day] = (acc[day] || 0) + 1
     return acc
   }, {}) || {}
@@ -125,7 +130,7 @@ export default async function DashboardPage() {
       status: link.is_active ? 'online' as const : 'disabled' as const,
       visibility: 'public' as const,
       title: link.title || 'Untitled Link',
-      url: `/${link.short_code}`,
+      url: `${process.env.NEXT_PUBLIC_APP_URL}/${link.short_code}`,
       created_at: link.created_at,
     })) || []),
     ...(bioPages?.map(page => ({
@@ -134,10 +139,10 @@ export default async function DashboardPage() {
       status: 'online' as const,
       visibility: 'public' as const,
       title: page.title,
-      url: `/bio/${page.username}`,
+      url: `${process.env.NEXT_PUBLIC_APP_URL}/bio/${page.username}`,
       created_at: page.created_at,
     })) || []),
-  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+  ].sort((a, b) => b.created_at - a.created_at)
 
   // Format recent activities
   const recentActivities = recentClicks?.map((click) => {

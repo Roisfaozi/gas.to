@@ -2,15 +2,15 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator markdown {
+  provider = "prisma-markdown"
+  title    = "Bio Shortlink"
+}
+
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-}
-
-generator markdown {
-  provider = "prisma-markdown"
-  title    = "Bio Shortlink"
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -60,28 +60,36 @@ model bio_pages {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model clicks {
-  id                String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  created_at        DateTime?   @default(now()) @db.Timestamptz(6)
-  link_id           String      @db.Uuid
-  ip                String?
-  city              String?
-  country           String?
-  device            String?
-  browser           String?
-  os                String?
-  referer           String?
-  user_agent        String?
-  session_id        String?
-  utm_source        String?
-  utm_medium        String?
-  utm_campaign      String?
-  device_type       String?
-  screen_resolution String?
-  is_unique         Boolean?    @default(true)
-  visit_duration    Int?
-  workspace_id      String?     @db.Uuid
-  links             links       @relation(fields: [link_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  workspaces        workspaces? @relation(fields: [workspace_id], references: [id], onUpdate: NoAction)
+  id                 String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_at         DateTime?         @default(now()) @db.Timestamptz(6)
+  link_id            String            @db.Uuid
+  ip                 String?
+  city               String?
+  country            String?
+  device             String?
+  browser            String?
+  os                 String?
+  referer            String?
+  user_agent         String?
+  session_id         String?
+  utm_source         String?
+  utm_medium         String?
+  utm_campaign       String?
+  device_type        String?
+  screen_resolution  String?
+  is_unique          Boolean?          @default(true)
+  visit_duration     Int?
+  workspace_id       String?           @db.Uuid
+  visitor_session_id String?           @db.Uuid
+  visitor_id         String?           @db.Uuid
+  screen_size        String?
+  language           String?
+  timezone           String?
+  platform           String?
+  fingerprint        String?
+  links              links             @relation(fields: [link_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  visitor_sessions   visitor_sessions? @relation(fields: [visitor_session_id], references: [id], onUpdate: NoAction)
+  workspaces         workspaces?       @relation(fields: [workspace_id], references: [id], onUpdate: NoAction)
 
   @@index([browser, created_at])
   @@index([country, created_at])
@@ -91,6 +99,9 @@ model clicks {
   @@index([os, created_at])
   @@index([session_id], map: "clicks_session_idx")
   @@index([workspace_id, created_at], map: "clicks_workspace_created_idx")
+  @@index([fingerprint])
+  @@index([session_id])
+  @@index([visitor_id])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -246,6 +257,56 @@ model workspaces {
   links             links[]
   workspace_members workspace_members[]
   users             users               @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model geolocation_data {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  session_id       String?           @db.Uuid
+  latitude         Float?
+  longitude        Float?
+  accuracy         Float?
+  city             String?
+  region           String?
+  country          String?
+  postal_code      String?
+  consent_given    Boolean?          @default(false)
+  created_at       DateTime?         @default(now()) @db.Timestamptz(6)
+  visitor_sessions visitor_sessions? @relation(fields: [session_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([session_id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model visitor_data {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  visitor_id        String    @db.Uuid
+  name              String?
+  email             String?
+  phone             String?
+  consent_given     Boolean?  @default(false)
+  consent_timestamp DateTime? @db.Timestamptz(6)
+  created_at        DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@index([visitor_id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model visitor_sessions {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  visitor_id       String             @db.Uuid
+  fingerprint      String?
+  started_at       DateTime?          @default(now()) @db.Timestamptz(6)
+  ended_at         DateTime?          @db.Timestamptz(6)
+  duration         Int?
+  is_returning     Boolean?           @default(false)
+  created_at       DateTime?          @default(now()) @db.Timestamptz(6)
+  clicks           clicks[]
+  geolocation_data geolocation_data[]
+
+  @@index([fingerprint])
+  @@index([visitor_id])
 }
 
 enum link_status {

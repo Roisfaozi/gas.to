@@ -57,6 +57,13 @@ erDiagram
   Boolean is_unique "nullable"
   Int visit_duration "nullable"
   String workspace_id FK "nullable"
+  String visitor_session_id FK "nullable"
+  String visitor_id "nullable"
+  String screen_size "nullable"
+  String language "nullable"
+  String timezone "nullable"
+  String platform "nullable"
+  String fingerprint "nullable"
 }
 "daily_stats" {
   String id PK
@@ -152,10 +159,45 @@ erDiagram
   DateTime updated_at "nullable"
   String owner_id FK
 }
+"geolocation_data" {
+  String id PK
+  String session_id FK "nullable"
+  Float latitude "nullable"
+  Float longitude "nullable"
+  Float accuracy "nullable"
+  String city "nullable"
+  String region "nullable"
+  String country "nullable"
+  String postal_code "nullable"
+  Boolean consent_given "nullable"
+  DateTime created_at "nullable"
+}
+"visitor_data" {
+  String id PK
+  String visitor_id
+  String name "nullable"
+  String email "nullable"
+  String phone "nullable"
+  Boolean consent_given "nullable"
+  DateTime consent_timestamp "nullable"
+  DateTime created_at "nullable"
+  DateTime updated_at "nullable"
+}
+"visitor_sessions" {
+  String id PK
+  String visitor_id
+  String fingerprint "nullable"
+  DateTime started_at "nullable"
+  DateTime ended_at "nullable"
+  Int duration "nullable"
+  Boolean is_returning "nullable"
+  DateTime created_at "nullable"
+}
 "bio_links" }o--|| "bio_pages" : bio_pages
 "bio_pages" }o--|| "users" : users
 "bio_pages" }o--o| "workspaces" : workspaces
 "clicks" }o--|| "links" : links
+"clicks" }o--o| "visitor_sessions" : visitor_sessions
 "clicks" }o--o| "workspaces" : workspaces
 "link_metadata" |o--|| "links" : links
 "link_tag_relations" }o--|| "links" : links
@@ -169,6 +211,7 @@ erDiagram
 "workspace_members" }o--|| "users" : users
 "workspace_members" }o--|| "workspaces" : workspaces
 "workspaces" }o--|| "users" : users
+"geolocation_data" }o--o| "visitor_sessions" : visitor_sessions
 ```
 
 ### `bio_links`
@@ -231,6 +274,13 @@ This model contains row level security and requires additional setup for migrati
   - `is_unique`: 
   - `visit_duration`: 
   - `workspace_id`: 
+  - `visitor_session_id`: 
+  - `visitor_id`: 
+  - `screen_size`: 
+  - `language`: 
+  - `timezone`: 
+  - `platform`: 
+  - `fingerprint`: 
 
 ### `daily_stats`
 This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -355,3 +405,46 @@ This model contains row level security and requires additional setup for migrati
   - `created_at`: 
   - `updated_at`: 
   - `owner_id`: 
+
+### `geolocation_data`
+This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+
+**Properties**
+  - `id`: 
+  - `session_id`: 
+  - `latitude`: 
+  - `longitude`: 
+  - `accuracy`: 
+  - `city`: 
+  - `region`: 
+  - `country`: 
+  - `postal_code`: 
+  - `consent_given`: 
+  - `created_at`: 
+
+### `visitor_data`
+This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+
+**Properties**
+  - `id`: 
+  - `visitor_id`: 
+  - `name`: 
+  - `email`: 
+  - `phone`: 
+  - `consent_given`: 
+  - `consent_timestamp`: 
+  - `created_at`: 
+  - `updated_at`: 
+
+### `visitor_sessions`
+This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+
+**Properties**
+  - `id`: 
+  - `visitor_id`: 
+  - `fingerprint`: 
+  - `started_at`: 
+  - `ended_at`: 
+  - `duration`: 
+  - `is_returning`: 
+  - `created_at`: 

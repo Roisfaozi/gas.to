@@ -8,6 +8,11 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+generator markdown {
+  provider = "prisma-markdown"
+  title    = "Bio Shortlink"
+}
+
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model bio_links {
   id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid

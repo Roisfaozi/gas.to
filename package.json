@@ -46,6 +46,7 @@
     "eslint": "^8",
     "eslint-config-next": "14.0.4",
     "postcss": "^8",
+    "prisma-markdown": "^1.0.9",
     "tailwindcss": "^3.3.0",
     "typescript": "^5"
   },

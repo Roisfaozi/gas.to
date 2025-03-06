@@ -155,6 +155,7 @@ export default async function DashboardPage() {
         ? `/bio/${link?.short_code}`
         : `/${link?.short_code}`,
       visited_at: click.created_at,
+      ip: click.ip || 'Unknown',
       city: click.city || 'Unknown',
       country: click.country || 'Unknown',
       os: click.os || 'Unknown',

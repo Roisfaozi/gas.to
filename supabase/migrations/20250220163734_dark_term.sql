@@ -156,6 +156,11 @@ CREATE POLICY "Users can update own bio pages" ON bio_pages
 CREATE POLICY "Users can delete own bio pages" ON bio_pages
   FOR DELETE USING (auth.uid() = user_id);
 
+CREATE POLICY "Public can read bio pages"
+ON bio_pages
+FOR SELECT
+USING (visibility = 'public');
+
 CREATE POLICY "Users can read own links" ON links
   FOR SELECT USING (auth.uid() = user_id);
 

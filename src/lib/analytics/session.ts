@@ -17,23 +17,28 @@ let currentSession: SessionData | null = null
  * Initialize a visitor session
  * This should be called when the application loads
  */
-export async function initSession(): Promise<SessionData> {
+export async function initSession(): Promise<SessionData | null> {
   try {
     // Generate browser fingerprint
     const fingerprint = await generateFingerprint()
 
     // Check for existing visitor with this fingerprint
-    const { data: existingVisitors } = await supabase
+    const { data: existingVisitors, error: visitorError } = await supabase
       .from('visitor_sessions')
       .select('visitor_id')
       .eq('fingerprint', fingerprint)
       .order('created_at', { ascending: false })
       .limit(1)
 
+    if (visitorError) {
+      console.error('Error checking for existing visitors:', visitorError)
+    }
+
     const isReturning = existingVisitors && existingVisitors.length > 0
-    const visitorId = isReturning
-      ? existingVisitors[0].visitor_id
-      : crypto.randomUUID()
+    const visitorId =
+      isReturning && existingVisitors[0]?.visitor_id
+        ? existingVisitors[0].visitor_id
+        : crypto.randomUUID()
 
     const currentEpoch = getCurrentEpoch()
 
@@ -52,7 +57,10 @@ export async function initSession(): Promise<SessionData> {
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('Error creating session:', error)
+      return null
+    }
 
     // Store the session data
     currentSession = {
@@ -74,15 +82,8 @@ export async function initSession(): Promise<SessionData> {
     return currentSession
   } catch (error) {
     console.error('Error initializing session:', error)
-    // Fallback to a basic session
-    const fallbackSession = {
-      sessionId: crypto.randomUUID(),
-      visitorId: crypto.randomUUID(),
-      fingerprint: crypto.randomUUID(),
-      isReturning: false,
-    }
-    currentSession = fallbackSession
-    return fallbackSession
+    // Return null instead of fallback to prevent potential issues
+    return null
   }
 }
 
@@ -90,7 +91,7 @@ export async function initSession(): Promise<SessionData> {
  * Get the current session data
  * If no session exists, initialize one
  */
-export async function getSession(): Promise<SessionData> {
+export async function getSession(): Promise<SessionData | null> {
   if (!currentSession) {
     return await initSession()
   }

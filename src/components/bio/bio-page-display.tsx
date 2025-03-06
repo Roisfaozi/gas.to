@@ -2,7 +2,7 @@
 
 import { initSession } from '@/lib/analytics/session'
 import { trackClick } from '@/lib/analytics/track'
-import { ExternalLink, Instagram, Linkedin, Moon, Sun, Twitter, Youtube } from 'lucide-react'
+import { ExternalLink, Facebook, Github, Instagram, Linkedin, Moon, Sun, Twitter, Youtube } from 'lucide-react'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
@@ -32,9 +32,9 @@ interface BioPage {
       primary: string
       text: string
       background: string
-      darkPrimary: string
-      darkText: string
-      darkBackground: string
+      darkPrimary?: string
+      darkText?: string
+      darkBackground?: string
     }
   }
   visibility: 'public' | 'private'
@@ -54,6 +54,10 @@ function SocialIcon({ platform }: { platform: string }) {
       return <Youtube className="h-5 w-5" />
     case 'linkedin':
       return <Linkedin className="h-5 w-5" />
+    case 'facebook':
+      return <Facebook className="h-5 w-5" />
+    case 'github':
+      return <Github className="h-5 w-5" />
     default:
       return <ExternalLink className="h-5 w-5" />
   }
@@ -69,13 +73,23 @@ export function BioPageDisplay({ bioPage }: { bioPage: BioPage }) {
     if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
       setIsDarkMode(true)
     }
-    initSession()
+
+    // Initialize analytics session
+    try {
+      initSession()
+    } catch (error) {
+      console.error('Failed to initialize analytics session:', error)
+    }
   }, [])
 
   // Handle link click with tracking
   const handleLinkClick = (linkId: string, url: string) => {
-    // Track the click
-    trackClick(linkId)
+    try {
+      // Track the click
+      trackClick(linkId)
+    } catch (error) {
+      console.error('Error tracking click:', error)
+    }
 
     // Open the link
     window.open(url, '_blank', 'noopener,noreferrer')
@@ -99,12 +113,32 @@ export function BioPageDisplay({ bioPage }: { bioPage: BioPage }) {
 
   if (!mounted) return null
 
-  const theme = bioPage.theme_config
+  // Ensure theme_config exists and has the expected structure
+  const theme = bioPage.theme_config || {
+    name: 'default',
+    colors: {
+      primary: '#4F46E5',
+      text: '#111827',
+      background: '#FFFFFF',
+      darkPrimary: '#4F46E5',
+      darkText: '#FFFFFF',
+      darkBackground: '#111827'
+    }
+  }
+
   const colors = isDarkMode ? {
-    primary: theme.colors.darkPrimary || theme.colors.primary,
-    text: theme.colors.darkText || '#FFFFFF',
-    background: theme.colors.darkBackground || '#111827'
-  } : theme.colors
+    primary: theme.colors?.darkPrimary || theme.colors?.primary || '#4F46E5',
+    text: theme.colors?.darkText || '#FFFFFF',
+    background: theme.colors?.darkBackground || '#111827'
+  } : {
+    primary: theme.colors?.primary || '#4F46E5',
+    text: theme.colors?.text || '#111827',
+    background: theme.colors?.background || '#FFFFFF'
+  }
+
+  // Ensure bio_links and social_links are arrays
+  const bioLinks = Array.isArray(bioPage.bio_links) ? bioPage.bio_links : []
+  const socialLinks = Array.isArray(bioPage.social_links) ? bioPage.social_links : []
 
   return (
     <div style={{ backgroundColor: colors.background }} className="min-h-screen">
@@ -121,12 +155,24 @@ export function BioPageDisplay({ bioPage }: { bioPage: BioPage }) {
         {/* Profile Header */}
         <div className="text-center mb-8">
           <div className="relative w-32 h-32 mx-auto mb-4">
-            <Image
-              src={bioPage.profile_image_url || '/placeholder-avatar.png'}
-              alt={bioPage.title}
-              fill
-              className="rounded-full object-cover"
-            />
+            {bioPage.profile_image_url ? (
+              <Image
+                src={bioPage.profile_image_url}
+                alt={bioPage.title}
+                fill
+                className="rounded-full object-cover"
+                onError={(e) => {
+                  // Fallback if image fails to load
+                  e.currentTarget.src = 'https://via.placeholder.com/150'
+                }}
+              />
+            ) : (
+              <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center">
+                <span className="text-3xl font-bold text-gray-400">
+                  {bioPage.title?.charAt(0) || '?'}
+                </span>
+              </div>
+            )}
           </div>
           <h1 style={{ color: colors.text }} className="text-2xl font-bold">
             {bioPage.title}
@@ -137,18 +183,18 @@ export function BioPageDisplay({ bioPage }: { bioPage: BioPage }) {
 
           {/* Social Links */}
           <div className="flex justify-center space-x-4 mt-4">
-            {bioPage.social_links.map((social, index) => (
+            {socialLinks.map((social, index) => (
               <a
                 key={social.id || index}
                 href={social.url}
-                onClick={(e) => {
-                  e.preventDefault()
-                  handleLinkClick(social.id || `social-${index}`, social.url)
-                }}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ color: colors.text }}
                 className="p-2 rounded-full transition-colors hover:bg-opacity-10 hover:bg-white"
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleLinkClick(social.id || `social-${index}`, social.url)
+                }}
               >
                 <SocialIcon platform={social.platform} />
               </a>
@@ -158,9 +204,9 @@ export function BioPageDisplay({ bioPage }: { bioPage: BioPage }) {
 
         {/* Links */}
         <div className="space-y-4">
-          {bioPage.bio_links
+          {bioLinks
             .filter(link => link.is_active)
-            .sort((a, b) => a.sort_order - b.sort_order)
+            .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
             .map((link) => (
               <a
                 key={link.id}
@@ -169,8 +215,6 @@ export function BioPageDisplay({ bioPage }: { bioPage: BioPage }) {
                   e.preventDefault()
                   handleLinkClick(link.id, link.url)
                 }}
-                target="_blank"
-                rel="noopener noreferrer"
                 style={{
                   backgroundColor: colors.primary,
                   color: colors.text
@@ -189,6 +233,7 @@ export function BioPageDisplay({ bioPage }: { bioPage: BioPage }) {
           </p>
         </div>
       </div>
-    </div >
+    </div>
   )
 }
+

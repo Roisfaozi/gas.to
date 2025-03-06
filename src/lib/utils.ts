@@ -9,13 +9,22 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function parseUserAgent(userAgent: string) {
-  const parser = new UAParser(userAgent)
-  const result = parser.getResult()
+  try {
+    const parser = new UAParser(userAgent)
+    const result = parser.getResult()
 
-  return {
-    browser: result.browser.name || 'Unknown',
-    os: result.os.name || 'Unknown',
-    device: result.device.type || 'desktop',
+    return {
+      browser: result.browser.name || 'Unknown',
+      os: result.os.name || 'Unknown',
+      device: result.device.type || 'desktop',
+    }
+  } catch (error) {
+    console.error('Error parsing user agent:', error)
+    return {
+      browser: 'Unknown',
+      os: 'Unknown',
+      device: 'desktop',
+    }
   }
 }
 
@@ -45,6 +54,7 @@ export function isValidUrl(url: string) {
 
 // Convert epoch timestamp (milliseconds) to Date object
 export function epochToDate(epoch: number): Date {
+  if (!epoch) return new Date()
   return new Date(epoch)
 }
 
@@ -58,12 +68,24 @@ export function formatEpochDate(
   epoch: number,
   formatString: string = 'PPP'
 ): string {
-  return format(epochToDate(epoch), formatString)
+  if (!epoch) return 'Unknown date'
+  try {
+    return format(epochToDate(epoch), formatString)
+  } catch (error) {
+    console.error('Error formatting epoch date:', error, epoch)
+    return 'Invalid date'
+  }
 }
 
 // Format epoch timestamp to relative time (e.g., "2 hours ago")
 export function formatEpochRelative(epoch: number): string {
-  return formatDistanceToNow(epochToDate(epoch), { addSuffix: true })
+  if (!epoch) return 'Unknown time'
+  try {
+    return formatDistanceToNow(epochToDate(epoch), { addSuffix: true })
+  } catch (error) {
+    console.error('Error formatting relative epoch:', error, epoch)
+    return 'Invalid time'
+  }
 }
 
 // Get current time as epoch timestamp

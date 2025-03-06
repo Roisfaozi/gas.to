@@ -2,7 +2,7 @@
 
 import { epochToDate } from '@/lib/utils'
 import { format } from 'date-fns'
-import { Chrome, Facebook, Globe, Monitor } from 'lucide-react'
+import { Chrome, Facebook, Globe, Monitor, Pin } from 'lucide-react'
 
 export interface ClickActivity {
   id: string
@@ -10,6 +10,7 @@ export interface ClickActivity {
   title: string
   url: string
   visited_at: number
+  ip: string
   city: string
   country: string
   os: string
@@ -73,6 +74,10 @@ export function RecentActivity({ activities }: RecentActivityProps) {
               <div className="flex items-center space-x-2">
                 <Chrome className="h-4 w-4 text-gray-400" />
                 <span className="text-sm text-gray-600">{activity.browser}</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Pin className="h-4 w-4 text-gray-400" />
+                <span className="text-sm text-gray-600">{activity.ip}</span>
               </div>
               {activity.referer && (
                 <div className="flex items-center space-x-2">

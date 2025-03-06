@@ -31,9 +31,9 @@ export async function trackClick(linkId: string): Promise<void> {
     await supabase.from('clicks').insert([
       {
         link_id: linkId,
-        session_id: session.sessionId,
-        visitor_id: session.visitorId,
-        fingerprint: session.fingerprint,
+        session_id: session?.sessionId,
+        visitor_id: session?.visitorId,
+        fingerprint: session?.fingerprint,
         ip: null, // IP is captured server-side
         referer,
         browser,
@@ -50,6 +50,7 @@ export async function trackClick(linkId: string): Promise<void> {
     ])
   } catch (error) {
     console.error('Error tracking click:', error)
+    // Don't throw error to prevent breaking user experience
   }
 }
 
@@ -71,9 +72,9 @@ export async function trackPageView(
     await supabase.from('clicks').insert([
       {
         link_id: null, // No specific link for page views
-        session_id: session.sessionId,
-        visitor_id: session.visitorId,
-        fingerprint: session.fingerprint,
+        session_id: session?.sessionId,
+        visitor_id: session?.visitorId,
+        fingerprint: session?.fingerprint,
         referer: document.referrer,
         user_agent: navigator.userAgent,
         // Additional metadata
@@ -85,5 +86,6 @@ export async function trackPageView(
     ])
   } catch (error) {
     console.error('Error tracking page view:', error)
+    // Don't throw error to prevent breaking user experience
   }
 }

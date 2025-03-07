@@ -15,25 +15,13 @@ export default async function BioPage({
     const userAgent = headersList.get('user-agent') || ''
     const referer = headersList.get('referer') || ''
     const ip = headersList.get('x-forwarded-for') || ''
+    const language = headersList.get('accept-language') || ''
 
-    // Ambil session pengguna (login atau tidak)
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    // Ambil data bio berdasarkan username
+    // Get bio page with all related data
     const { data: bioPage, error } = await supabase
       .from('bio_pages')
-      .select(
-        `
-        id,
-        username,
-        title,
-        description,
-        visibility,
-        profile_image_url,
-        social_image_url,
-        theme_config,
+      .select(`
+        *,
         bio_links (
           id,
           title,
@@ -47,56 +35,75 @@ export default async function BioPage({
           platform,
           url
         )
-      `
-      )
+      `)
       .eq('username', username)
-      .maybeSingle()
+      .single()
 
-    // Jika terjadi error atau tidak ditemukan, tampilkan halaman 404
-    if (error || !bioPage) {
+    // Log error for debugging
+    if (error) {
       console.error('Error fetching bio page:', error)
-      return notFound()
+      notFound()
     }
 
-    // Jika halaman bio bersifat PRIVATE dan user belum login, redirect ke 404
-    if (bioPage.visibility === 'private' && !session?.user) {
-      return notFound()
+    // If no bio page found
+    if (!bioPage) {
+      console.error(`Bio page not found for username: ${username}`)
+      notFound()
     }
 
-    // Tracking pengunjung halaman bio
+    // Check visibility
+    if (bioPage.visibility === 'private') {
+      // You might want to check if the viewer is the owner
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session || session.user.id !== bioPage.user_id) {
+        return <BioPageDisplay bioPage={{ ...bioPage, bio_links: [], social_links: [] }} />
+      }
+    }
+
+    // Track the page view with enhanced analytics
     const { browser, os, device } = parseUserAgent(userAgent)
     const currentEpoch = getCurrentEpoch()
 
+    // Get UTM parameters
+    const url = new URL(headers().get('referer') || '')
+    const searchParams = new URLSearchParams(url.search)
+
     try {
-      await supabase.from('clicks').insert([
-        {
-          link_id: null, // Tidak terkait dengan link shortener
-          bio_page_id: bioPage.id,
-          ip,
-          referer,
-          browser,
-          os,
-          device,
-          user_agent: userAgent,
-          type: 'bio_view',
-          created_at: currentEpoch,
-        },
-      ])
+      await supabase
+        .from('clicks')
+        .insert([
+          {
+            bio_page_id: bioPage.id,
+            ip,
+            referer,
+            browser,
+            os,
+            device,
+            user_agent: userAgent,
+            language: language.split(',')[0],
+            type: 'bio_view',
+            utm_source: searchParams.get('utm_source'),
+            utm_medium: searchParams.get('utm_medium'),
+            utm_campaign: searchParams.get('utm_campaign'),
+            created_at: currentEpoch,
+            is_unique: true
+          },
+        ])
     } catch (analyticsError) {
       console.error('Error recording analytics:', analyticsError)
+      // Continue even if analytics fails
     }
 
-    // Pastikan data `bio_links` dan `social_links` selalu berbentuk array
+    // Ensure bio_links and social_links are arrays
     const processedBioPage = {
       ...bioPage,
-      username: bioPage.username || 'Anonymous', // Jika username kosong, gunakan default
       bio_links: Array.isArray(bioPage.bio_links) ? bioPage.bio_links : [],
-      social_links: Array.isArray(bioPage.social_links) ? bioPage.social_links : [],
+      social_links: Array.isArray(bioPage.social_links) ? bioPage.social_links : []
     }
 
     return <BioPageDisplay bioPage={processedBioPage} />
   } catch (error) {
     console.error('Unexpected error in BioPage:', error)
-    return notFound()
+    notFound()
   }
 }

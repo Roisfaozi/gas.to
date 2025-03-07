@@ -46,7 +46,8 @@ export async function GET(
 
   // Parse user agent
   const { browser, os, device } = parseUserAgent(userAgent)
-
+  const url = new URL(link.original_url)
+  const searchParams = new URLSearchParams(url.search)
   // Check if click is unique
   const { data: existingClick } = await supabase
     .from('clicks')
@@ -73,6 +74,9 @@ export async function GET(
         visitor_id: null,
         session_id: null,
         fingerprint: null,
+        utm_source: searchParams.get('utm_source'),
+        utm_medium: searchParams.get('utm_medium'),
+        utm_campaign: searchParams.get('utm_campaign'),
         is_unique: true,
         created_at: getCurrentEpoch(),
       },
@@ -95,6 +99,9 @@ export async function GET(
         session_id: null,
         fingerprint: null,
         is_unique: false,
+        utm_source: searchParams.get('utm_source'),
+        utm_medium: searchParams.get('utm_medium'),
+        utm_campaign: searchParams.get('utm_campaign'),
         created_at: getCurrentEpoch(),
       },
     ])

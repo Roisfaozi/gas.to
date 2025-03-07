@@ -5,7 +5,10 @@ import { getSession } from './session'
 /**
  * Track a link click with enhanced analytics
  */
-export async function trackClick(linkId: string): Promise<void> {
+export async function trackClick(
+  linkId: string,
+  type: 'bio' | 'shortlink' | 'social' = 'shortlink'
+): Promise<void> {
   try {
     // Get current session
     const session = await getSession()
@@ -22,8 +25,14 @@ export async function trackClick(linkId: string): Promise<void> {
     const language = navigator.language
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-    // Get referrer
+    // Get referrer and UTM parameters
     const referer = document.referrer
+    const urlParams = new URLSearchParams(window.location.search)
+    const utmSource = urlParams.get('utm_source')
+    const utmMedium = urlParams.get('utm_medium')
+    const utmCampaign = urlParams.get('utm_campaign')
+    const utmTerm = urlParams.get('utm_term')
+    const utmContent = urlParams.get('utm_content')
 
     const currentEpoch = getCurrentEpoch()
 
@@ -45,12 +54,55 @@ export async function trackClick(linkId: string): Promise<void> {
         timezone,
         platform: navigator.platform,
         user_agent: userAgent,
+        type,
+        utm_source: utmSource,
+        utm_medium: utmMedium,
+        utm_campaign: utmCampaign,
+        utm_term: utmTerm,
+        utm_content: utmContent,
         created_at: currentEpoch,
+        is_unique: true, // This will be handled by RLS policies
       },
     ])
   } catch (error) {
     console.error('Error tracking click:', error)
-    // Don't throw error to prevent breaking user experience
+  }
+}
+
+/**
+ * Track a bio page view
+ */
+export async function trackBioPageView(bioPageId: string): Promise<void> {
+  try {
+    const session = await getSession()
+    const userAgent = navigator.userAgent
+    const { browser, os, device } = parseUserAgent(userAgent)
+    const urlParams = new URLSearchParams(window.location.search)
+    const currentEpoch = getCurrentEpoch()
+
+    await supabase.from('clicks').insert([
+      {
+        bio_page_id: bioPageId,
+        session_id: session?.sessionId,
+        visitor_id: session?.visitorId,
+        fingerprint: session?.fingerprint,
+        type: 'bio_view',
+        referer: document.referrer,
+        browser,
+        os,
+        device,
+        user_agent: userAgent,
+        utm_source: urlParams.get('utm_source'),
+        utm_medium: urlParams.get('utm_medium'),
+        utm_campaign: urlParams.get('utm_campaign'),
+        utm_term: urlParams.get('utm_term'),
+        utm_content: urlParams.get('utm_content'),
+        created_at: currentEpoch,
+        is_unique: true,
+      },
+    ])
+  } catch (error) {
+    console.error('Error tracking bio page view:', error)
   }
 }
 
@@ -62,30 +114,60 @@ export async function trackPageView(
   pageTitle: string
 ): Promise<void> {
   try {
-    // Get current session
     const session = await getSession()
-
+    const userAgent = navigator.userAgent
+    const { browser, os, device } = parseUserAgent(userAgent)
+    const urlParams = new URLSearchParams(window.location.search)
     const currentEpoch = getCurrentEpoch()
 
-    // Record page view (using the clicks table for simplicity)
-    // In a more complex implementation, you might want a separate page_views table
     await supabase.from('clicks').insert([
       {
-        link_id: null, // No specific link for page views
         session_id: session?.sessionId,
         visitor_id: session?.visitorId,
         fingerprint: session?.fingerprint,
-        referer: document.referrer,
-        user_agent: navigator.userAgent,
-        // Additional metadata
-        title: pageTitle,
-        url: pageUrl,
         type: 'page_view',
+        url: pageUrl,
+        title: pageTitle,
+        referer: document.referrer,
+        browser,
+        os,
+        device,
+        user_agent: userAgent,
+        utm_source: urlParams.get('utm_source'),
+        utm_medium: urlParams.get('utm_medium'),
+        utm_campaign: urlParams.get('utm_campaign'),
+        utm_term: urlParams.get('utm_term'),
+        utm_content: urlParams.get('utm_content'),
         created_at: currentEpoch,
+        is_unique: true,
       },
     ])
   } catch (error) {
     console.error('Error tracking page view:', error)
-    // Don't throw error to prevent breaking user experience
+  }
+}
+
+/**
+ * Track user engagement
+ */
+export async function trackEngagement(
+  type: 'scroll' | 'click' | 'hover',
+  details: Record<string, any>
+): Promise<void> {
+  try {
+    const session = await getSession()
+    const currentEpoch = getCurrentEpoch()
+
+    await supabase.from('user_engagement').insert([
+      {
+        session_id: session?.sessionId,
+        visitor_id: session?.visitorId,
+        type,
+        details,
+        created_at: currentEpoch,
+      },
+    ])
+  } catch (error) {
+    console.error('Error tracking engagement:', error)
   }
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { initSession } from '@/lib/analytics/session'
-import { trackClick } from '@/lib/analytics/track'
+import { trackBioPageView, trackClick, trackEngagement } from '@/lib/analytics/track'
 import { ExternalLink, Facebook, Github, Instagram, Linkedin, Moon, Sun, Twitter, Youtube } from 'lucide-react'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
@@ -66,6 +66,7 @@ function SocialIcon({ platform }: { platform: string }) {
 export function BioPageDisplay({ bioPage }: { bioPage: BioPage }) {
   const [mounted, setMounted] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
+  const [hasTrackedView, setHasTrackedView] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -74,24 +75,44 @@ export function BioPageDisplay({ bioPage }: { bioPage: BioPage }) {
       setIsDarkMode(true)
     }
 
-    // Initialize analytics session
-    try {
-      initSession()
-    } catch (error) {
-      console.error('Failed to initialize analytics session:', error)
+    // Initialize analytics session and track page view
+    const initAnalytics = async () => {
+      try {
+        await initSession()
+        if (!hasTrackedView) {
+          await trackBioPageView(bioPage.id)
+          setHasTrackedView(true)
+        }
+      } catch (error) {
+        console.error('Failed to initialize analytics:', error)
+      }
     }
-  }, [])
 
-  // Handle link click with tracking
-  const handleLinkClick = (linkId: string, url: string) => {
+    initAnalytics()
+
+    // Track scroll depth
+    const handleScroll = () => {
+      const scrollDepth = Math.round(
+        (window.scrollY + window.innerHeight) / document.documentElement.scrollHeight * 100
+      )
+      if (scrollDepth >= 25 || scrollDepth >= 50 || scrollDepth >= 75 || scrollDepth >= 100) {
+        trackEngagement('scroll', { depth: scrollDepth })
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [bioPage.id, hasTrackedView])
+
+  // Handle link click with enhanced tracking
+  const handleLinkClick = async (linkId: string, url: string, type: 'bio' | 'social' = 'bio') => {
     try {
-      // Track the click
-      trackClick(linkId)
+      await trackClick(linkId, type)
+      await trackEngagement('click', { linkId, type })
     } catch (error) {
       console.error('Error tracking click:', error)
     }
 
-    // Open the link
     window.open(url, '_blank', 'noopener,noreferrer')
   }
 
@@ -193,7 +214,7 @@ export function BioPageDisplay({ bioPage }: { bioPage: BioPage }) {
                 className="p-2 rounded-full transition-colors hover:bg-opacity-10 hover:bg-white"
                 onClick={(e) => {
                   e.preventDefault()
-                  handleLinkClick(social.id || `social-${index}`, social.url)
+                  handleLinkClick(social.id || `social-${index}`, social.url, 'social')
                 }}
               >
                 <SocialIcon platform={social.platform} />
@@ -213,7 +234,7 @@ export function BioPageDisplay({ bioPage }: { bioPage: BioPage }) {
                 href={link.url}
                 onClick={(e) => {
                   e.preventDefault()
-                  handleLinkClick(link.id, link.url)
+                  handleLinkClick(link.id, link.url, 'bio')
                 }}
                 style={{
                   backgroundColor: colors.primary,

@@ -2,7 +2,6 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { BioStats } from '@/components/stats/bio-stats'
 import { requireAuth } from '@/lib/auth'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { notFound } from 'next/navigation'
 
 export default async function BioStatsPage({
   params: { id },
@@ -54,25 +53,26 @@ export default async function BioStatsPage({
     .eq('user_id', session.user.id)
     .single()
 
-  if (!bioPage) {
-    notFound()
-  }
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">Bio Page Statistics</h1>
           <a
-            href={`/bio/${bioPage.username}`}
+            href={`/bio/${bioPage?.username}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-indigo-600 hover:text-indigo-900"
           >
-            {`${process.env.NEXT_PUBLIC_APP_URL}/bio/${bioPage.username}`}
+            {`${process.env.NEXT_PUBLIC_APP_URL}/bio/${bioPage?.username}`}
           </a>
         </div>
-        <BioStats bioPage={bioPage} />
+        {
+          bioPage && (
+            <BioStats bioPage={bioPage} />
+
+          )
+        }
       </div>
     </DashboardLayout>
   )

@@ -1,9 +1,9 @@
-import { requireAuth } from '@/lib/auth'
-import { DashboardLayout } from '@/components/layout/dashboard-layout'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { BioPageStats } from '@/components/bio/bio-page-stats'
 import { BioPageGrid } from '@/components/bio/bio-page-grid'
+import { BioPageStats } from '@/components/bio/bio-page-stats'
 import { CreateBioButton } from '@/components/bio/create-bio-button'
+import { DashboardLayout } from '@/components/layout/dashboard-layout'
+import { requireAuth } from '@/lib/auth'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 export default async function BioPages() {
   const session = await requireAuth()
@@ -23,7 +23,6 @@ export default async function BioPages() {
 
   // Calculate total views across all bio pages
   const totalViews = bioPages?.reduce((sum, page) => sum + (page.clicks?.[0]?.count || 0), 0) || 0
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -33,7 +32,7 @@ export default async function BioPages() {
         </div>
 
         <BioPageStats totalPages={bioPages?.length || 0} totalViews={totalViews} />
-        
+
         <BioPageGrid bioPages={bioPages || []} />
       </div>
     </DashboardLayout>

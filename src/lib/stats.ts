@@ -8,11 +8,15 @@ export async function getLinkStats(
   try {
     const { data, error } = await supabase.rpc('get_link_stats', {
       p_link_id: linkId,
-      p_start_date: startDate || null,
-      p_end_date: endDate || null,
+      p_start_date: startDate,
+      p_end_date: endDate,
     })
 
-    if (error) throw error
+    if (error) {
+      console.error('Error calling get_link_stats:', error)
+      throw error
+    }
+
     return data
   } catch (error) {
     console.error('Error getting link stats:', error)
@@ -32,7 +36,10 @@ export async function getBioPageStats(
       .select('id')
       .eq('bio_page_id', bioPageId)
 
-    if (linksError) throw linksError
+    if (linksError) {
+      console.error('Error getting bio page links:', linksError)
+      throw linksError
+    }
 
     // Get stats for each link
     const linkIds = links?.map((link) => link.id) || []

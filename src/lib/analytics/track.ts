@@ -7,7 +7,7 @@ import { getSession } from './session'
  */
 export async function trackClick(
   linkId: string,
-  type: 'bio' | 'shortlink' | 'social' = 'shortlink'
+  type: 'bio' | 'shortlink' = 'shortlink'
 ): Promise<void> {
   try {
     // Get current session
@@ -37,13 +37,12 @@ export async function trackClick(
     const currentEpoch = getCurrentEpoch()
 
     // Record the click with enhanced data
-    await supabase.from('clicks').insert([
+    const { error } = await supabase.from('clicks').insert([
       {
         link_id: linkId,
         session_id: session?.sessionId,
         visitor_id: session?.visitorId,
         fingerprint: session?.fingerprint,
-        ip: null, // IP is captured server-side
         referer,
         browser,
         os,
@@ -61,9 +60,14 @@ export async function trackClick(
         utm_term: utmTerm,
         utm_content: utmContent,
         created_at: currentEpoch,
-        is_unique: true, // This will be handled by RLS policies
+        is_unique: true,
       },
     ])
+
+    if (error) {
+      console.error('Error inserting click:', error)
+      throw error
+    }
   } catch (error) {
     console.error('Error tracking click:', error)
   }
@@ -80,7 +84,7 @@ export async function trackBioPageView(bioPageId: string): Promise<void> {
     const urlParams = new URLSearchParams(window.location.search)
     const currentEpoch = getCurrentEpoch()
 
-    await supabase.from('clicks').insert([
+    const { error } = await supabase.from('clicks').insert([
       {
         bio_page_id: bioPageId,
         session_id: session?.sessionId,
@@ -101,49 +105,13 @@ export async function trackBioPageView(bioPageId: string): Promise<void> {
         is_unique: true,
       },
     ])
+
+    if (error) {
+      console.error('Error inserting bio page view:', error)
+      throw error
+    }
   } catch (error) {
     console.error('Error tracking bio page view:', error)
-  }
-}
-
-/**
- * Track a page view
- */
-export async function trackPageView(
-  pageUrl: string,
-  pageTitle: string
-): Promise<void> {
-  try {
-    const session = await getSession()
-    const userAgent = navigator.userAgent
-    const { browser, os, device } = parseUserAgent(userAgent)
-    const urlParams = new URLSearchParams(window.location.search)
-    const currentEpoch = getCurrentEpoch()
-
-    await supabase.from('clicks').insert([
-      {
-        session_id: session?.sessionId,
-        visitor_id: session?.visitorId,
-        fingerprint: session?.fingerprint,
-        type: 'page_view',
-        url: pageUrl,
-        title: pageTitle,
-        referer: document.referrer,
-        browser,
-        os,
-        device,
-        user_agent: userAgent,
-        utm_source: urlParams.get('utm_source'),
-        utm_medium: urlParams.get('utm_medium'),
-        utm_campaign: urlParams.get('utm_campaign'),
-        utm_term: urlParams.get('utm_term'),
-        utm_content: urlParams.get('utm_content'),
-        created_at: currentEpoch,
-        is_unique: true,
-      },
-    ])
-  } catch (error) {
-    console.error('Error tracking page view:', error)
   }
 }
 
@@ -158,7 +126,7 @@ export async function trackEngagement(
     const session = await getSession()
     const currentEpoch = getCurrentEpoch()
 
-    await supabase.from('user_engagement').insert([
+    const { error } = await supabase.from('user_engagement').insert([
       {
         session_id: session?.sessionId,
         visitor_id: session?.visitorId,
@@ -167,6 +135,11 @@ export async function trackEngagement(
         created_at: currentEpoch,
       },
     ])
+
+    if (error) {
+      console.error('Error inserting engagement:', error)
+      throw error
+    }
   } catch (error) {
     console.error('Error tracking engagement:', error)
   }

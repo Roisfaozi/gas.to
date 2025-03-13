@@ -311,11 +311,12 @@ export function EditBioForm({ bioPage }: { bioPage: BioPage }) {
   const handleSocialImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-
+    console.log(file)
     // TODO: Implement image upload to storage
     // For now, we'll just use a placeholder URL
     setValue('social_image_url', URL.createObjectURL(file))
   }
+  console.log(bioPage.profile_image_url)
 
   const addSocialLink = () => {
     setSocialLinks([...socialLinks, { id: crypto.randomUUID(), platform: '', url: '' }])
@@ -516,6 +517,7 @@ export function EditBioForm({ bioPage }: { bioPage: BioPage }) {
                     onChange={(e) => {
                       const newLinks = [...socialLinks]
                       newLinks[index].platform = e.target.value
+                      console.log(newLinks)
                       setSocialLinks(newLinks)
                     }}
                     className="block w-1/3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"

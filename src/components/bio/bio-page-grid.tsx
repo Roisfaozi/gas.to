@@ -27,7 +27,7 @@ export function BioPageGrid({ bioPages }: { bioPages: BioPage[] }) {
     page.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     page.username.toLowerCase().includes(searchQuery.toLowerCase())
   )
-
+  console.log(bioPages)
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this bio page?')) {
       await deleteBioPage(id)
